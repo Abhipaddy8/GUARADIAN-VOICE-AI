@@ -1,0 +1,15 @@
+{
+  "name": "guardianvoice-ai",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:ingestor": "npm --workspace apps/ingestor run dev",
+    "dev:orchestrator": "npm --workspace apps/orchestrator run dev",
+    "dev:admin": "npm --workspace apps/admin-ui run dev",
+    "dev:family": "npm --workspace apps/family-ui run dev"
+  }
+}
