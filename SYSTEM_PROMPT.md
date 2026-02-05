@@ -9,6 +9,6 @@
 3. Inject Anchor: "Remember the blue Jeep? Let's talk about that."
 4. If patient mentions pain, exit and trigger `STATUS_EMERGENCY`.
 
-**Voice Mapping (ElevenLabs):**
+**Retell Variable Mapping:**
 - `{{family_member}}`: Cloned voice identity
 - `{{memory_anchor}}`: The specific story to use

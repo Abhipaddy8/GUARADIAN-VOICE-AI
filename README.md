@@ -8,7 +8,7 @@ GuardianVoice AI is a cyber-physical platform that uses real-time smartwatch vit
 - **Infrastructure:** Vultr High-Performance VM (Central System of Record)
 - **Brain:** Google Gemini 2.0 Flash (Autonomous Reasoning)
 - **Simulation:** Webots (Headless Digital Twin streamed via Vultr)
-- **Voice:** ElevenLabs (Low-latency familial voice synthesis)
+- **Voice:** Retell AI (Telephony) + ElevenLabs (Cloned Familial Voice)
 - **Sensors:** Samsung Fit3 (Hardware-in-the-loop telemetry)
 
 ## Features

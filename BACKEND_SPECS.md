@@ -11,7 +11,7 @@
 - **Output:** `{ "action": "CALL_PATIENT", "anchor_id": "MEMORY_04" }`
 
 ## 3. Actuators
-- **Voice:** ElevenLabs TTS call with dynamic variable injection (`{{memory_anchor}}`)
+- **Voice:** Retell API call with ElevenLabs voice configured on the agent (`{{memory_anchor}}`)
 - **Robot:** Webots Supervisor API commands: `robot.move_to(patient_pos)`
 
 ## 4. Voice Latency Targets

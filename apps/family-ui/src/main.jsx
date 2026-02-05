@@ -1,7 +1,59 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 function App() {
+  const [patientId, setPatientId] = useState("P001");
+  const [title, setTitle] = useState("");
+  const [story, setStory] = useState("");
+  const [anchors, setAnchors] = useState([]);
+  const [status, setStatus] = useState("");
+
+  async function loadAnchors() {
+    try {
+      const res = await fetch("/api/anchors");
+      const data = await res.json();
+      setAnchors(data.anchors || []);
+    } catch (err) {
+      console.error("Failed to load anchors", err);
+    }
+  }
+
+  useEffect(() => {
+    loadAnchors();
+  }, []);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setStatus("");
+
+    if (!title || !story) {
+      setStatus("Please add a title and a memory story.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/anchors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: patientId, title, story })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setStatus(err.error || "Upload failed.");
+        return;
+      }
+
+      setTitle("");
+      setStory("");
+      setStatus("Anchor saved.");
+      loadAnchors();
+    } catch (err) {
+      console.error("Failed to save anchor", err);
+      setStatus("Upload failed.");
+    }
+  }
+
   return (
     <div style={styles.page}>
       <header style={styles.header}>
@@ -24,11 +76,53 @@ function App() {
       </section>
 
       <section style={styles.panel}>
-        <div style={styles.panelTitle}>Recent Interventions</div>
+        <div style={styles.panelTitle}>Add a Memory Anchor</div>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>
+            Patient ID
+            <input
+              style={styles.input}
+              value={patientId}
+              onChange={(e) => setPatientId(e.target.value)}
+            />
+          </label>
+          <label style={styles.label}>
+            Anchor Title
+            <input
+              style={styles.input}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Blue Jeep"
+            />
+          </label>
+          <label style={styles.label}>
+            Memory Story
+            <textarea
+              style={styles.textarea}
+              value={story}
+              onChange={(e) => setStory(e.target.value)}
+              placeholder="Tell us the memory in a few sentences"
+              rows={4}
+            />
+          </label>
+          <button style={styles.secondary} type="submit">Save Anchor</button>
+          {status && <div style={styles.status}>{status}</div>}
+        </form>
+      </section>
+
+      <section style={styles.panel}>
+        <div style={styles.panelTitle}>Recent Anchors</div>
         <div style={styles.panelBody}>
-          <div style={styles.logItem}>Jan 18, 4:12pm — “Blue Jeep” anchor used</div>
-          <div style={styles.logItem}>Jan 18, 9:36pm — “Garden Walk” anchor used</div>
-          <div style={styles.logItem}>Jan 19, 7:04am — “Wedding Photo” anchor used</div>
+          {anchors.length === 0 ? (
+            <div style={styles.empty}>No anchors yet.</div>
+          ) : (
+            anchors.map((anchor) => (
+              <div key={anchor.id} style={styles.logItem}>
+                <div style={styles.logLine}><strong>{anchor.title}</strong> • {anchor.patient_id}</div>
+                <div style={styles.logMeta}>{anchor.story}</div>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>
@@ -138,6 +232,53 @@ const styles = {
     background: "#fef3c7",
     padding: 12,
     borderRadius: 12,
+    fontSize: 14
+  },
+  logLine: {
+    fontSize: 14,
+    marginBottom: 4
+  },
+  logMeta: {
+    color: "#6b7280",
+    fontSize: 12
+  },
+  form: {
+    display: "grid",
+    gap: 12
+  },
+  label: {
+    display: "grid",
+    gap: 6,
+    fontSize: 14,
+    color: "#4b5563"
+  },
+  input: {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #e2e8f0",
+    fontSize: 14
+  },
+  textarea: {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #e2e8f0",
+    fontSize: 14
+  },
+  secondary: {
+    background: "#1f2937",
+    color: "#f9fafb",
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: 10,
+    fontSize: 14,
+    justifySelf: "start"
+  },
+  status: {
+    fontSize: 13,
+    color: "#4b5563"
+  },
+  empty: {
+    color: "#6b7280",
     fontSize: 14
   }
 };

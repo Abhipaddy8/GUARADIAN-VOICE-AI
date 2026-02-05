@@ -11,5 +11,5 @@
 - **Simulation:** `xvfb-run webots --mode=fast --batch my_world.wbt`
 
 ## Important
-- ElevenLabs voice latency must stay < 1000ms
+- Retell call latency must stay < 1000ms
 - Ensure MQTT client auto-reconnects to the Vultr IP

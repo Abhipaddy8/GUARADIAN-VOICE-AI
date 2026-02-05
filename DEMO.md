@@ -3,8 +3,10 @@
 ## What Works Now
 - MQTT vitals ingest
 - Triggered intervention event
-- Orchestrator stub for ElevenLabs
-- Admin and Family UI demo panels
+- Retell call orchestration (ElevenLabs voice via Retell)
+- Incident log stored in SQLite
+- Admin incident log from live data
+- Family portal anchor onboarding (stored in SQLite)
 
 ## Quickstart
 1. Install deps at the repo root:
@@ -18,5 +20,6 @@
    `mosquitto_pub -h localhost -t vitals/stream -m '{"patient_id":"P001","hr":115,"accel_delta":30,"ts":1700000000}'`
 
 ## Notes
-- Set ElevenLabs keys in `apps/orchestrator/.env` to enable real calls.
+- Set Retell keys in `apps/orchestrator/.env` to enable real calls.
+- API runs on `http://localhost:4001`.
 - This demo focuses on the data path and UI layout, not clinical safety.
