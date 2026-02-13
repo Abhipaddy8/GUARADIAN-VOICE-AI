@@ -6,6 +6,7 @@ function App() {
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
   const [anchors, setAnchors] = useState([]);
+  const [incidents, setIncidents] = useState([]);
   const [status, setStatus] = useState("");
 
   async function loadAnchors() {
@@ -18,8 +19,21 @@ function App() {
     }
   }
 
+  async function loadIncidents() {
+    try {
+      const res = await fetch("/api/incidents");
+      const data = await res.json();
+      setIncidents(data.incidents || []);
+    } catch (err) {
+      console.error("Failed to load incidents", err);
+    }
+  }
+
   useEffect(() => {
     loadAnchors();
+    loadIncidents();
+    const interval = setInterval(loadIncidents, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   async function handleSubmit(event) {
@@ -52,6 +66,30 @@ function App() {
       console.error("Failed to save anchor", err);
       setStatus("Upload failed.");
     }
+  }
+
+  function escalationLabel(level) {
+    const labels = { 1: "Mild", 2: "Moderate", 3: "Severe", 4: "Critical" };
+    return labels[level] || "Unknown";
+  }
+
+  function escalationBadgeStyle(level) {
+    const colors = {
+      1: { bg: "#d1fae5", text: "#065f46" },
+      2: { bg: "#fef3c7", text: "#92400e" },
+      3: { bg: "#ffedd5", text: "#9a3412" },
+      4: { bg: "#fee2e2", text: "#991b1b" }
+    };
+    const c = colors[level] || colors[1];
+    return {
+      background: c.bg,
+      color: c.text,
+      padding: "2px 8px",
+      borderRadius: 6,
+      fontSize: 11,
+      fontWeight: 600,
+      display: "inline-block"
+    };
   }
 
   return (
@@ -120,6 +158,36 @@ function App() {
               <div key={anchor.id} style={styles.logItem}>
                 <div style={styles.logLine}><strong>{anchor.title}</strong> • {anchor.patient_id}</div>
                 <div style={styles.logMeta}>{anchor.story}</div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section style={styles.panel}>
+        <div style={styles.panelTitle}>💛 When We Helped</div>
+        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
+          Times our system reached out to provide comfort and calm.
+        </p>
+        <div style={styles.panelBody}>
+          {incidents.length === 0 ? (
+            <div style={styles.empty}>No interventions yet.</div>
+          ) : (
+            incidents.map((inc) => (
+              <div key={inc.id} style={styles.historyCard}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <strong style={{ fontSize: 14 }}>{inc.anchor_title || "Comfort call"}</strong>
+                  <span style={escalationBadgeStyle(inc.escalation_level)}>
+                    {escalationLabel(inc.escalation_level)}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                  {new Date(inc.created_at).toLocaleString()} · {inc.reason}
+                </div>
+                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                  Status: {inc.status === "called" ? "✓ Call placed" : inc.status}
+                  {inc.confidence && ` · Confidence: ${(inc.confidence * 100).toFixed(0)}%`}
+                </div>
               </div>
             ))
           )}
@@ -241,6 +309,12 @@ const styles = {
   logMeta: {
     color: "#6b7280",
     fontSize: 12
+  },
+  historyCard: {
+    background: "#fef9ef",
+    padding: 14,
+    borderRadius: 14,
+    border: "1px solid #f3e8d0"
   },
   form: {
     display: "grid",

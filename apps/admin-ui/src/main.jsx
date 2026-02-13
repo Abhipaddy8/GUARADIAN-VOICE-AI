@@ -14,6 +14,9 @@ function formatReasoning(text) {
 
 function App() {
   const [incidents, setIncidents] = useState([]);
+  const [demoPhone, setDemoPhone] = useState("");
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoResult, setDemoResult] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +38,86 @@ function App() {
       clearInterval(interval);
     };
   }, []);
+
+  async function handleDemoCall() {
+    if (!demoPhone) {
+      setDemoResult("Please enter a phone number");
+      return;
+    }
+    setDemoLoading(true);
+    setDemoResult("");
+    try {
+      const res = await fetch("/api/demo-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_number: demoPhone })
+      });
+      const data = await res.json();
+      if (data.call_id) {
+        setDemoResult("✓ Call placed! Check your phone.");
+      } else {
+        setDemoResult("Call status: " + (data.call_status || data.error || "unknown"));
+      }
+    } catch (err) {
+      setDemoResult("Error: " + err.message);
+    }
+    setDemoLoading(false);
+  }
+
+  function escalationBadge(level) {
+    const map = {
+      1: { bg: "#d1fae5", text: "#065f46", label: "Level 1 · Mild" },
+      2: { bg: "#fef3c7", text: "#92400e", label: "Level 2 · Moderate" },
+      3: { bg: "#ffedd5", text: "#9a3412", label: "Level 3 · Severe" },
+      4: { bg: "#fee2e2", text: "#991b1b", label: "Level 4 · Critical" }
+    };
+    const data = map[level] || map[1];
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          padding: "2px 8px",
+          borderRadius: 6,
+          fontSize: 11,
+          fontWeight: 600,
+          background: data.bg,
+          color: data.text
+        }}
+      >
+        {data.label}
+      </span>
+    );
+  }
+
+  function callStatusDisplay(incident) {
+    const status = incident.status;
+    const map = {
+      called: { dot: "#10b981", label: "Call Placed" },
+      error: { dot: "#ef4444", label: "Call Failed" },
+      monitored: { dot: "#9ca3af", label: "Monitoring Only" },
+      queued: { dot: "#3b82f6", label: "Queued" },
+      stubbed: { dot: "#9ca3af", label: "Stubbed (Retell not configured)" },
+      pending: { dot: "#3b82f6", label: "Queued" }
+    };
+    const data = map[status] || { dot: "#9ca3af", label: status || "Unknown" };
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151" }}>
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: data.dot,
+            display: "inline-block"
+          }}
+        />
+        <span>{data.label}</span>
+        {incident.call_id && (
+          <span style={{ color: "#6b7280", fontSize: 11 }}>({incident.call_id})</span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>
@@ -76,6 +159,36 @@ function App() {
       </section>
 
       <section style={styles.panel}>
+        <div style={styles.panelTitle}>🔔 Try It — Trigger a Demo Call</div>
+        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>
+          Enter a phone number to receive a live GuardianVoice intervention call.
+        </p>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            type="tel"
+            placeholder="+1234567890"
+            value={demoPhone}
+            onChange={(e) => setDemoPhone(e.target.value)}
+            style={styles.input}
+          />
+          <button onClick={handleDemoCall} disabled={demoLoading} style={styles.demoButton}>
+            {demoLoading ? "Calling..." : "📞 Trigger Call"}
+          </button>
+        </div>
+        {demoResult && (
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 13,
+              color: demoResult.includes("✓") ? "#065f46" : "#991b1b"
+            }}
+          >
+            {demoResult}
+          </div>
+        )}
+      </section>
+
+      <section style={styles.panel}>
         <div style={styles.panelTitle}>Incident Log</div>
         <div style={styles.panelBodyColumn}>
           {incidents.length === 0 ? (
@@ -85,6 +198,12 @@ function App() {
               <div key={incident.id} style={styles.logItem}>
                 <div style={styles.logLine}>
                   <strong>{incident.patient_id}</strong> • {incident.reason}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  {escalationBadge(incident.escalation_level)}
+                  <span style={{ fontSize: 11, color: "#6b7280" }}>
+                    Tone: {incident.call_tone || "unknown"}
+                  </span>
                 </div>
                 <div style={styles.logMeta}>
                   <strong>Anchor:</strong> {incident.anchor_title || "Anchor pending"}
@@ -100,6 +219,7 @@ function App() {
                   )}
                   Status: {incident.status}
                 </div>
+                {callStatusDisplay(incident)}
               </div>
             ))
           )}
@@ -200,6 +320,24 @@ const styles = {
     fontSize: 16,
     fontWeight: 600,
     marginBottom: 12
+  },
+  input: {
+    padding: "10px 14px",
+    borderRadius: 10,
+    border: "1px solid #d1d5db",
+    fontSize: 14,
+    fontFamily: "'Georgia', serif",
+    minWidth: 200
+  },
+  demoButton: {
+    background: "#163b2f",
+    color: "#fefae0",
+    padding: "10px 20px",
+    border: "none",
+    borderRadius: 10,
+    fontSize: 14,
+    fontFamily: "'Georgia', serif",
+    cursor: "pointer"
   },
   panelBody: {
     display: "grid",

@@ -208,6 +208,76 @@ app.post("/api/calls/trigger", async (req, res) => {
   }
 });
 
+// Demo call for judges - no patient setup required
+app.post("/api/demo-call", async (req, res) => {
+  const { phone_number } = req.body || {};
+
+  if (!phone_number) {
+    res.status(400).json({ error: "phone_number is required" });
+    return;
+  }
+
+  // Clean phone number format
+  const cleanNumber = phone_number.replace(/[\s\-\(\)]/g, "");
+  if (!cleanNumber.startsWith("+")) {
+    res.status(400).json({ error: "Phone number must include country code (e.g. +1234567890)" });
+    return;
+  }
+
+  // Get a sample anchor for the demo
+  const allAnchors = getAnchors();
+  const sampleAnchor = allAnchors[0] || {
+    title: "A warm family memory",
+    story: "Remember the good times we shared together, the laughter and love that filled our home."
+  };
+
+  // Log the demo incident
+  const incident = logIncident({
+    patient_id: "DEMO",
+    reason: "DEMO_CALL",
+    anchor_title: sampleAnchor.title,
+    gemini_reasoning: "Demo call triggered by hackathon judge",
+    confidence: 1.0,
+    status: "queued",
+    escalation_level: 2,
+    call_tone: "warm_personal"
+  });
+
+  if (!retellApiKey || !retellFromNumber || !retellAgentId) {
+    console.log("[orchestrator] ℹ Retell not configured for demo call");
+    setIncidentStatus({ id: incident.id, status: "stubbed", call_id: null });
+    res.json({ incident_id: incident.id, call_status: "stubbed", message: "Retell not configured" });
+    return;
+  }
+
+  try {
+    const callId = await triggerRetellCall({
+      apiKey: retellApiKey,
+      fromNumber: retellFromNumber,
+      toNumber: cleanNumber,
+      agentId: retellAgentId,
+      agentVersion: retellAgentVersion,
+      dynamicVariables: {
+        escalation_level: "2",
+        memory_anchor_title: sampleAnchor.title,
+        memory_anchor_story: sampleAnchor.story || "",
+        call_tone: "warm_personal",
+        family_member_name: "Sarah",
+        patient_name: "Dad"
+      },
+      metadata: { patient_id: "DEMO", reason: "DEMO_CALL" }
+    });
+
+    setIncidentStatus({ id: incident.id, status: "called", call_id: callId });
+    console.log(`[orchestrator] ✓ Demo call placed to ${cleanNumber}: ${callId}`);
+    res.json({ incident_id: incident.id, call_status: "called", call_id: callId });
+  } catch (err) {
+    console.error("[orchestrator] Demo call failed:", err.message);
+    setIncidentStatus({ id: incident.id, status: "error", call_id: null, call_error: err.message });
+    res.status(500).json({ incident_id: incident.id, call_status: "error", error: err.message });
+  }
+});
+
 app.listen(apiPort, () => {
   console.log(`[orchestrator] API listening on http://localhost:${apiPort}`);
 });
