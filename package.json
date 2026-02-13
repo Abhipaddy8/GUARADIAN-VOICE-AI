@@ -12,8 +12,12 @@
     "dev:admin": "npm --workspace apps/admin-ui run dev",
     "dev:family": "npm --workspace apps/family-ui run dev",
     "verify": "node scripts/verify-features.js",
+    "lint": "eslint apps/ingestor/src apps/orchestrator/src packages/shared/src --ext .js",
     "sim:vitals": "node scripts/vitals-simulator.js",
     "demo": "node scripts/demo-scenario.js",
     "seed": "node scripts/seed-demo-data.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   }
 }
