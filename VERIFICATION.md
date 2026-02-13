@@ -1,8 +1,8 @@
 # GuardianVoice AI — Feature Verification Report
 
-**Generated:** 2026-02-13T06:31:59.238Z
+**Generated:** 2026-02-13T06:39:44.812Z
 **Base URL:** http://localhost:4001
-**Node Version:** v24.4.1
+**Node Version:** v22.22.0
 
 ## Results
 
@@ -19,7 +19,7 @@
 | 9 | Patients Endpoint | ❌ FAIL | fetch failed |
 | 10 | Admin UI Accessible | ❌ FAIL | Admin UI not running on port 5173 |
 | 11 | Family UI Accessible | ❌ FAIL | Family UI not running on port 5174 |
-| 12 | MQTT Broker Running | ❌ FAIL |  |
+| 12 | MQTT Broker Running | ❌ FAIL | connect ECONNREFUSED 127.0.0.1:1883 |
 
 ## Summary
 
