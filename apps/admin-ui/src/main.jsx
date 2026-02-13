@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
+// Helper to format AI reasoning for display
+function formatReasoning(text) {
+  if (text.includes("Error analyzing with Gemini")) {
+    return "🔄 Using fallback anchor selection (Gemini API unavailable)";
+  }
+  if (text.includes("No memory anchors configured")) {
+    return "ℹ️ No custom anchors - using generic comfort approach";
+  }
+  return text.substring(0, 150) + (text.length > 150 ? "..." : "");
+}
+
 function App() {
   const [incidents, setIncidents] = useState([]);
 
@@ -76,7 +87,18 @@ function App() {
                   <strong>{incident.patient_id}</strong> • {incident.reason}
                 </div>
                 <div style={styles.logMeta}>
-                  {incident.anchor_title || "Anchor pending"} • {incident.status}
+                  <strong>Anchor:</strong> {incident.anchor_title || "Anchor pending"}
+                </div>
+                {incident.gemini_reasoning && (
+                  <div style={styles.logReasoning}>
+                    <strong>AI Reasoning:</strong> {formatReasoning(incident.gemini_reasoning)}
+                  </div>
+                )}
+                <div style={styles.logMeta}>
+                  {incident.confidence && (
+                    <>Confidence: {(incident.confidence * 100).toFixed(0)}% • </>
+                  )}
+                  Status: {incident.status}
                 </div>
               </div>
             ))
@@ -218,6 +240,14 @@ const styles = {
   logMeta: {
     color: "#6b7280",
     fontSize: 12
+  },
+  logReasoning: {
+    marginTop: 8,
+    padding: 8,
+    background: "rgba(255, 255, 255, 0.5)",
+    borderRadius: 8,
+    fontSize: 12,
+    lineHeight: 1.4
   },
   empty: {
     color: "#6b7280",

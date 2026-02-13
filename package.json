@@ -10,6 +10,9 @@
     "dev:ingestor": "npm --workspace apps/ingestor run dev",
     "dev:orchestrator": "npm --workspace apps/orchestrator run dev",
     "dev:admin": "npm --workspace apps/admin-ui run dev",
-    "dev:family": "npm --workspace apps/family-ui run dev"
+    "dev:family": "npm --workspace apps/family-ui run dev",
+    "sim:vitals": "node scripts/vitals-simulator.js",
+    "demo": "node scripts/demo-scenario.js",
+    "seed": "node scripts/seed-demo-data.js"
   }
 }
